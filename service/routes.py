@@ -51,8 +51,8 @@ def create_accounts():
     account.create()
     message = account.serialize()
     # Uncomment once get_accounts has been implemented
-    # location_url = url_for("get_accounts", account_id=account.id, _external=True)
-    location_url = "/"  # Remove once get_accounts has been implemented
+    location_url = url_for("read_accounts", account_id=account.id, _external=True)
+    # location_url = "/" Remove once get_accounts has been implemented
     return make_response(
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
@@ -68,52 +68,46 @@ def list_accounts():
     List all customer accounts
     """
     app.logger.info("Request to list all accounts")
-    all_accounts = Account().all()
+    all_accounts = Account.all()
     if not all_accounts:
-        return make_response(jsonify([]), status.HTTP_200_OK)
+        return jsonify([]), status.HTTP_200_OK
     accounts_list = [account.serialize() for account in all_accounts]
-    return make_response(jsonify(accounts_list), status.HTTP_200_OK)
+    return jsonify(accounts_list), status.HTTP_200_OK
 
 ######################################################################
 # READ AN ACCOUNT
 ######################################################################
 
 # ... place you code here to READ an account ...
-@app.route("/accounts/<int:id>", methods=["GET"])
-def read_account():
+@app.route("/accounts/<int:account_id>", methods=["GET"])
+def read_accounts(account_id):
     """
-    Read a customer account
+    Reads an Account
+    This endpoint will read an Account based the account_id that is requested
     """
-    app.logger.info("Request to read an account id :{id}")
-    check_content_type("application/json")
-    account = Account().find(id)
+    app.logger.info("Request to read an Account with id: %s", account_id)
+    account = Account.find(account_id)
     if not account:
-        return make_response({"error": "Account not found with id {id}"},
-            status.HTTP_404_NOT_FOUND
-        )
-    
-    account_data = account.serialize()
-    return make_response(jsonify(account_data), status.HTTP_200_OK)
+        return {"error" : f"Account not found with id: {account_id}."}, status.HTTP_404_NOT_FOUND
+    return account.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # UPDATE AN EXISTING ACCOUNT
 ######################################################################
 
 # ... place you code here to UPDATE an account ...
-@app.route("/accounts/<int:id>", methods=["PUT"])
-def update_account():
+@app.route("/accounts/<int:account_id>", methods=["PUT"])
+def update_account(account_id):
     """
     Update a customer account
     """
-    account = Account().find(id)
+    app.logger.info("Request to update an Account with id: %s", account_id)
+    account = Account.find(account_id)
     if not account:
-        return make_response({"error": "Account not found"},
-            status.HTTP_404_NOT_FOUND
-        )
+        return {"error" : f"Account not found with id: {account_id}."}, status.HTTP_404_NOT_FOUND
     account.deserialize(request.get_json())
     account.update()
-    account_data = account.serialize()
-    return make_response(jsonify(account_data), status.HTTP_200_OK)
+    return account.serialize(), status.HTTP_200_OK
 
 
 ######################################################################
@@ -121,18 +115,16 @@ def update_account():
 ######################################################################
 
 # ... place you code here to DELETE an account ...
-@app.route("/accounts/<int:id>", methods=["DELETE"])
-def delete_account():
+@app.route("/accounts/<int:account_id>", methods=["DELETE"])
+def delete_account(account_id):
     """
-    Update a customer account
+    Delete a customer account
     """
-    account = Account().find(id)
+    app.logger.info("Request to delete an Account with id: %s", account_id)
+    account = Account.find(account_id)
     if account:
         account.delete()
-    return make_response(
-        jsonify(""),
-        status.HTTP_204_NO_CONTENT
-    )
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
